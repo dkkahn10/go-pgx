@@ -13,12 +13,12 @@ func main() {
 	conn := util.Connect("Creating table in Windows postgreSQL")
 	defer conn.Close()
 
-	var tags string
-	err := conn.QueryRow(`
+	var tag string
+	rows, err := conn.Query(`
 		SELECT jsonb_array_elements_text(data->'tags') AS tag
 		FROM cards 
 		WHERE id=2
-	`).Scan(&tags)
+	`)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -28,5 +28,10 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	fmt.Printf("Found some tags %s\n", tags)
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&tag)
+		fmt.Printf("Tag: %s\n", tag)
+	}
 }
